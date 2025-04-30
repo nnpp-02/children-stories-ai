@@ -1,4 +1,18 @@
-export const data = {
+export type Book = {
+  title: string;
+  author: string;
+  chapters: Chapter[];
+};
+
+export type Chapter = {
+  title: string;
+  content: string;
+  imagePrompt: string;
+  image: string;
+  page: number;
+};
+
+export const data: Book = {
   title: "3 Little Acorns Learn About AI",
   author: "William",
   chapters: [

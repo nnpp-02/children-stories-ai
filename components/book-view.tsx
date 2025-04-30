@@ -1,6 +1,7 @@
 "use client";
 
 import { data } from "@/data";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import HTMLFlipBook from "react-pageflip";
 
@@ -46,7 +47,7 @@ export default function BookView() {
         maxHeight={dimensions.height * 0.9}
         minWidth={315}
         maxWidth={dimensions.width}
-        maxShadowOpacity={0.5}
+        maxShadowOpacity={1}
         mobileScrollSupport={true}
         drawShadow
         useMouseEvents
@@ -63,7 +64,7 @@ export default function BookView() {
         flippingTime={1000}
         usePortrait={false}
         startZIndex={1000}
-        autoSize={false}
+        autoSize
         clickEventForward={false}
         swipeDistance={0}
         showPageCorners={false}
@@ -78,6 +79,29 @@ export default function BookView() {
               {data.author}
             </h1>
           </div>
+        </div>
+
+        {data.chapters.map((page, index) => (
+          <div key={index} className="flex-1 overflow-y-auto bg-white">
+            <h1 className="text-4xl font-bold mb-6">{page.title}</h1>
+            <div className="relative w-full h-96 mt-4 mb-12">
+              <Image
+                src={page.image}
+                alt={page.title}
+                fill
+                style={{ objectFit: "cover" }}
+                className="rounded shadow"
+              />
+            </div>
+            <p className="mt-4 text-lg">{page.content}</p>
+            <span className="absolute bottom-4 right-6">Page {index + 1}</span>
+          </div>
+        ))}
+
+        <div className="flex flex-col justify-center items-center p-6 h-full bg-white">
+          <p className="flex justify-center items-center h-screen">
+            Thank you!
+          </p>
         </div>
       </HTMLFlipBook>
     </div>
