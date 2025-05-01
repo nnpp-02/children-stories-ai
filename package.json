@@ -14,6 +14,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.503.0",
     "next": "15.3.1",
+    "prisma": "^6.7.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-pageflip": "^2.0.3",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@prisma/client": "^6.7.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
