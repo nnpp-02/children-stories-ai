@@ -32,69 +32,64 @@ export default function MainMenu({}: MainMenuProps) {
   if (!mounted) return null;
 
   return (
-    <div
-      className={`min-h-screen bg-gradient-to-b from-muted/30 to-muted/80 flex flex-col ${theme.shadow}`}
-    >
-      {/* Header */}
-      <header className="w-full py-4 px-6 sm:px-8 md:px-12 flex justify-between items-center border-b border-muted shadow-sm backdrop-blur-sm bg-background/80 sticky top-0 z-10">
-        <Link
-          href="/"
-          className="flex items-center gap-3 hover:opacity-90 transition-opacity"
-        >
-          <div className="relative h-12 w-12 md:h-14 md:w-14">
-            <Image
-              src="/images/logo.png"
-              alt="AI Kids Book"
-              width={56}
-              height={56}
-              className="object-contain"
-              priority
-              unoptimized
-            />
-          </div>
-          <h1
-            className={`text-xl md:text-2xl font-bold tracking-tight ${theme.text}`}
-          >
-            <span className="text-primary">AI</span> Kids Book
-          </h1>
-        </Link>
-
-        <nav className="hidden md:flex items-center gap-8">
-          <Link
-            href="/generate"
-            className={`font-medium text-base ${theme.text} hover:text-primary transition-colors`}
-          >
-            Generate Book
-          </Link>
-          <Link
-            href="/login"
-            className={`font-medium text-base ${theme.text} hover:text-primary transition-colors`}
-          >
-            Login
-          </Link>
-          <Link
-            href="/search"
-            className={`font-medium text-base ${theme.text} hover:text-primary transition-colors`}
-          >
-            Search
-          </Link>
-        </nav>
-
-        <div className="flex md:hidden items-center gap-2">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/search">
-              <Search className="h-5 w-5" />
-              <span className="sr-only">Search</span>
-            </Link>
-          </Button>
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/login">
-              <LogIn className="h-5 w-5" />
-              <span className="sr-only">Login</span>
-            </Link>
-          </Button>
+    <header className="w-full py-4 px-6 sm:px-8 md:px-12 flex justify-between items-center border-b border-muted shadow-sm backdrop-blur-sm bg-background/95 fixed top-0 left-0 right-0 z-50">
+      <Link
+        href="/"
+        className="flex items-center gap-3 hover:opacity-90 transition-opacity"
+      >
+        <div className="relative h-12 w-12 md:h-14 md:w-14">
+          <Image
+            src="/images/logo.png"
+            alt="AI Kids Book"
+            width={56}
+            height={56}
+            className="object-contain"
+            priority
+            unoptimized
+          />
         </div>
-      </header>
-    </div>
+        <h1
+          className={`text-xl md:text-2xl font-bold tracking-tight ${theme.text}`}
+        >
+          <span className="text-primary">AI</span> Kids Book
+        </h1>
+      </Link>
+
+      <nav className="hidden md:flex items-center gap-8">
+        <Link
+          href="/generate"
+          className={`font-medium text-base ${theme.text} hover:text-primary transition-colors`}
+        >
+          Generate Book
+        </Link>
+        <Link
+          href="/login"
+          className={`font-medium text-base ${theme.text} hover:text-primary transition-colors`}
+        >
+          Login
+        </Link>
+        <Link
+          href="/search"
+          className={`font-medium text-base ${theme.text} hover:text-primary transition-colors`}
+        >
+          Search
+        </Link>
+      </nav>
+
+      <div className="flex md:hidden items-center gap-2">
+        <Button variant="ghost" size="icon" asChild>
+          <Link href="/search">
+            <Search className="h-5 w-5" />
+            <span className="sr-only">Search</span>
+          </Link>
+        </Button>
+        <Button variant="ghost" size="icon" asChild>
+          <Link href="/login">
+            <LogIn className="h-5 w-5" />
+            <span className="sr-only">Login</span>
+          </Link>
+        </Button>
+      </div>
+    </header>
   );
 }
