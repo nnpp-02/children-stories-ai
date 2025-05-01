@@ -1,0 +1,100 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import {
+  type ColorTheme,
+  COLOR_VARIANTS,
+  DEFAULT_THEME,
+} from "@/constants/theme";
+import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
+import { LogIn, Search } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+
+type MainMenuProps = {};
+
+export default function MainMenu({}: MainMenuProps) {
+  const [mounted, setMounted] = useState(false);
+  const [selectedColor] = useLocalStorage<ColorTheme>(
+    "book-color-theme",
+    DEFAULT_THEME
+  );
+
+  // Get current theme classes
+  const theme = COLOR_VARIANTS[selectedColor];
+
+  // Prevent hydration mismatch by only rendering after client-side mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  return (
+    <div
+      className={`min-h-screen bg-gradient-to-b from-muted/30 to-muted/80 flex flex-col ${theme.shadow}`}
+    >
+      {/* Header */}
+      <header className="w-full py-4 px-6 sm:px-8 md:px-12 flex justify-between items-center border-b border-muted shadow-sm backdrop-blur-sm bg-background/80 sticky top-0 z-10">
+        <Link
+          href="/"
+          className="flex items-center gap-3 hover:opacity-90 transition-opacity"
+        >
+          <div className="relative h-12 w-12 md:h-14 md:w-14">
+            <Image
+              src="/images/logo.png"
+              alt="AI Kids Book"
+              width={56}
+              height={56}
+              className="object-contain"
+              priority
+              unoptimized
+            />
+          </div>
+          <h1
+            className={`text-xl md:text-2xl font-bold tracking-tight ${theme.text}`}
+          >
+            <span className="text-primary">AI</span> Kids Book
+          </h1>
+        </Link>
+
+        <nav className="hidden md:flex items-center gap-8">
+          <Link
+            href="/generate"
+            className={`font-medium text-base ${theme.text} hover:text-primary transition-colors`}
+          >
+            Generate Book
+          </Link>
+          <Link
+            href="/login"
+            className={`font-medium text-base ${theme.text} hover:text-primary transition-colors`}
+          >
+            Login
+          </Link>
+          <Link
+            href="/search"
+            className={`font-medium text-base ${theme.text} hover:text-primary transition-colors`}
+          >
+            Search
+          </Link>
+        </nav>
+
+        <div className="flex md:hidden items-center gap-2">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/search">
+              <Search className="h-5 w-5" />
+              <span className="sr-only">Search</span>
+            </Link>
+          </Button>
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/login">
+              <LogIn className="h-5 w-5" />
+              <span className="sr-only">Login</span>
+            </Link>
+          </Button>
+        </div>
+      </header>
+    </div>
+  );
+}
