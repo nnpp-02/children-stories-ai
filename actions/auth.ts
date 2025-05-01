@@ -5,10 +5,9 @@ import {
   hashPassword,
   comparePassword,
   generateToken,
-  setAuthCookie,
   getAuthToken,
   verifyToken,
-  deleteAuthCookie,
+  getAuthCookieOptions,
 } from "@/lib/utils/auth";
 import {
   loginSchema,
@@ -17,18 +16,19 @@ import {
   type RegisterInput,
 } from "@/lib/validations/auth";
 import { ZodError } from "zod";
+import { cookies } from "next/headers";
 
 /**
  * Check if the user is authenticated
  */
 export async function authCheckAction() {
-  const token = await getAuthToken();
-
-  if (!token) {
-    return { user: null, loggedIn: false };
-  }
-
   try {
+    const token = await getAuthToken();
+
+    if (!token) {
+      return { user: null, loggedIn: false };
+    }
+
     const decoded = verifyToken(token);
 
     if (!decoded) {
@@ -88,7 +88,7 @@ export async function loginOrRegisterAction(formData: LoginInput | FormData) {
         return { error: "Invalid password", loggedIn: false };
       }
 
-      // Generate token and set cookie
+      // Generate token
       const token = generateToken({
         id: existingUser.id,
         email: existingUser.email,
@@ -96,7 +96,9 @@ export async function loginOrRegisterAction(formData: LoginInput | FormData) {
         role: existingUser.role,
       });
 
-      setAuthCookie(token);
+      // Set auth cookie
+      const cookieStore = await cookies();
+      cookieStore.set("auth", token, getAuthCookieOptions());
 
       return {
         user: {
@@ -125,7 +127,7 @@ export async function loginOrRegisterAction(formData: LoginInput | FormData) {
         },
       });
 
-      // Generate token and set cookie
+      // Generate token
       const token = generateToken({
         id: newUser.id,
         email: newUser.email,
@@ -133,7 +135,9 @@ export async function loginOrRegisterAction(formData: LoginInput | FormData) {
         role: newUser.role,
       });
 
-      setAuthCookie(token);
+      // Set auth cookie
+      const cookieStore = await cookies();
+      cookieStore.set("auth", token, getAuthCookieOptions());
 
       return {
         user: newUser,
@@ -159,13 +163,16 @@ export async function loginOrRegisterAction(formData: LoginInput | FormData) {
  */
 export async function logoutAction() {
   try {
-    const token = getAuthToken();
+    const token = await getAuthToken();
 
     if (!token) {
       return { message: "No active session found" };
     }
 
-    deleteAuthCookie();
+    // Delete auth cookie
+    const cookieStore = await cookies();
+    cookieStore.delete("auth");
+
     return { message: "Successfully logged out" };
   } catch (error) {
     console.error("Logout error:", error);

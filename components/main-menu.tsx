@@ -7,10 +7,12 @@ import {
   DEFAULT_THEME,
 } from "@/constants/theme";
 import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
-import { LogIn, Search } from "lucide-react";
+import { useAuth } from "@/contexts/auth-context";
+import { LogIn, LogOut, Search, User, BookOpen, Settings } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type MainMenuProps = {};
 
@@ -20,6 +22,8 @@ export default function MainMenu({}: MainMenuProps) {
     "book-color-theme",
     DEFAULT_THEME
   );
+  const { user, isLoggedIn, logout } = useAuth();
+  const router = useRouter();
 
   // Get current theme classes
   const theme = COLOR_VARIANTS[selectedColor];
@@ -28,6 +32,13 @@ export default function MainMenu({}: MainMenuProps) {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/login");
+  };
+
+  const isAdmin = user?.role === "admin";
 
   if (!mounted) return null;
 
@@ -62,12 +73,39 @@ export default function MainMenu({}: MainMenuProps) {
         >
           Generate Book
         </Link>
-        <Link
-          href="/login"
-          className={`font-medium text-base ${theme.text} hover:text-primary transition-colors`}
-        >
-          Login
-        </Link>
+
+        {isLoggedIn ? (
+          <>
+            <Link
+              href="/dashboard"
+              className={`font-medium text-base ${theme.text} hover:text-primary transition-colors`}
+            >
+              Dashboard
+            </Link>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className={`font-medium text-base ${theme.text} hover:text-primary transition-colors`}
+              >
+                Admin
+              </Link>
+            )}
+            <button
+              onClick={handleLogout}
+              className={`font-medium text-base ${theme.text} hover:text-primary transition-colors`}
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <Link
+            href="/login"
+            className={`font-medium text-base ${theme.text} hover:text-primary transition-colors`}
+          >
+            Login
+          </Link>
+        )}
+
         <Link
           href="/search"
           className={`font-medium text-base ${theme.text} hover:text-primary transition-colors`}
@@ -83,12 +121,36 @@ export default function MainMenu({}: MainMenuProps) {
             <span className="sr-only">Search</span>
           </Link>
         </Button>
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/login">
-            <LogIn className="h-5 w-5" />
-            <span className="sr-only">Login</span>
-          </Link>
-        </Button>
+
+        {isLoggedIn ? (
+          <>
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/dashboard">
+                <User className="h-5 w-5" />
+                <span className="sr-only">Dashboard</span>
+              </Link>
+            </Button>
+            {isAdmin && (
+              <Button variant="ghost" size="icon" asChild>
+                <Link href="/admin">
+                  <Settings className="h-5 w-5" />
+                  <span className="sr-only">Admin</span>
+                </Link>
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" onClick={handleLogout}>
+              <LogOut className="h-5 w-5" />
+              <span className="sr-only">Logout</span>
+            </Button>
+          </>
+        ) : (
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/login">
+              <LogIn className="h-5 w-5" />
+              <span className="sr-only">Login</span>
+            </Link>
+          </Button>
+        )}
       </div>
     </header>
   );

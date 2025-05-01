@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
+import { ResponseCookie } from "next/dist/compiled/@edge-runtime/cookies";
 
 /**
  * Hash a password using bcrypt
@@ -36,18 +37,16 @@ export const generateToken = (payload: {
 };
 
 /**
- * Set an HTTP-only cookie with the JWT token
+ * Get auth cookie options
  */
-export const setAuthCookie = async (token: string) => {
-  const cookieStore = await cookies();
-
-  cookieStore.set("auth", token, {
+export const getAuthCookieOptions = (): Partial<ResponseCookie> => {
+  return {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     path: "/",
     maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
-  });
+  };
 };
 
 /**
@@ -56,14 +55,6 @@ export const setAuthCookie = async (token: string) => {
 export const getAuthToken = async () => {
   const cookieStore = await cookies();
   return cookieStore.get("auth")?.value;
-};
-
-/**
- * Delete the auth cookie
- */
-export const deleteAuthCookie = async () => {
-  const cookieStore = await cookies();
-  cookieStore.delete("auth");
 };
 
 /**
