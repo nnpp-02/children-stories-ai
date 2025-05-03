@@ -1,4 +1,4 @@
-import { protectAdmin } from "@/hooks/protect";
+import { protectAdmin } from "@/components/protect";
 import { LogoutButton } from "@/components/logout-button";
 
 export default async function AdminPage() {

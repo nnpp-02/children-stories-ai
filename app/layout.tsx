@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import MainMenu from "@/components/main-menu";
 import { AuthProvider } from "@/contexts/auth-context";
+import { Toaster } from "sonner";
 
 import "./globals.css";
 
@@ -35,6 +36,7 @@ export default function RootLayout({
           <main className="pt-[72px] md:pt-[80px] min-h-screen">
             {children}
           </main>
+          <Toaster position="top-center" />
         </AuthProvider>
       </body>
     </html>

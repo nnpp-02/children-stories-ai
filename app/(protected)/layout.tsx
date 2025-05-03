@@ -1,4 +1,4 @@
-import { protectPage } from "@/hooks/protect";
+import { protectPage } from "@/components/protect";
 
 export default async function ProtectedLayout({
   children,

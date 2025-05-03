@@ -26,4 +26,38 @@ model User {
   role      Role     @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  books     Book[]
+}
+
+model Book {
+  id                   String    @id @default(cuid())
+  bookTitle            String
+  bookCoverUrl         String?
+  bookCoverDescription String?
+  slug                 String    @unique
+  numPages             Int       @default(0)
+  status               String    @default("pending") // pending, completed, failed
+  userId               String
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapters             Chapter[]
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([bookTitle])
+}
+
+model Chapter {
+  id               String   @id @default(cuid())
+  subTitle         String
+  textContent      String   @db.Text
+  imageUrl         String?
+  imageDescription String?
+  page             String
+  bookId           String
+  book             Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([subTitle])
+  @@index([bookId])
 }

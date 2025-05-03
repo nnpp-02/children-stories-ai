@@ -1,4 +1,4 @@
-import { protectAdmin } from "@/hooks/protect";
+import { protectAdmin } from "@/components/protect";
 
 export default async function AdminLayout({
   children,

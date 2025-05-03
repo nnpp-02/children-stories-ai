@@ -8,7 +8,15 @@ import {
 } from "@/constants/theme";
 import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
 import { useAuth } from "@/contexts/auth-context";
-import { LogIn, LogOut, Search, User, BookOpen, Settings } from "lucide-react";
+import {
+  LogIn,
+  LogOut,
+  Search,
+  User,
+  BookOpen,
+  Settings,
+  PlusCircle,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -67,12 +75,15 @@ export default function MainMenu({}: MainMenuProps) {
       </Link>
 
       <nav className="hidden md:flex items-center gap-8">
-        <Link
-          href="/generate"
-          className={`font-medium text-base ${theme.text} hover:text-primary transition-colors`}
-        >
-          Generate Book
-        </Link>
+        {isLoggedIn && (
+          <Link
+            href="/dashboard/generate-book"
+            className={`font-medium text-base ${theme.text} hover:text-primary transition-colors flex items-center gap-1`}
+          >
+            <PlusCircle className="h-4 w-4" />
+            Create Story
+          </Link>
+        )}
 
         {isLoggedIn ? (
           <>
@@ -124,6 +135,14 @@ export default function MainMenu({}: MainMenuProps) {
 
         {isLoggedIn ? (
           <>
+            {isLoggedIn && (
+              <Button variant="ghost" size="icon" asChild>
+                <Link href="/dashboard/generate-book">
+                  <PlusCircle className="h-5 w-5" />
+                  <span className="sr-only">Create Story</span>
+                </Link>
+              </Button>
+            )}
             <Button variant="ghost" size="icon" asChild>
               <Link href="/dashboard">
                 <User className="h-5 w-5" />

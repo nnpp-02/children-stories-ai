@@ -7,7 +7,6 @@ import {
   DEFAULT_THEME,
   type ColorTheme,
 } from "@/constants/theme";
-import { data } from "@/data";
 import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
 import {
   BookOpen,
@@ -19,20 +18,76 @@ import {
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import HTMLFlipBook from "react-pageflip";
+import { getBookById } from "@/actions/book";
 
-export default function BookView() {
+type BookViewProps = {
+  bookId: string;
+};
+
+type BookData = {
+  id: string;
+  title: string;
+  coverImage: string | null;
+  coverDescription?: string;
+  status: string;
+  slug: string;
+  chapters: Array<{
+    id: string;
+    bookId: string;
+    createdAt: Date;
+    updatedAt: Date;
+    page: string;
+    subTitle: string;
+    textContent: string;
+    imageUrl: string | null;
+    imageDescription: string | null;
+  }>;
+  createdAt: Date;
+  author?: string;
+};
+
+export default function BookView({ bookId }: BookViewProps) {
   const bookRef = useRef<any>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const [totalPages, setTotalPages] = useState(data.chapters.length + 2); // Cover + chapters + thank you page
   const [isFlipping, setIsFlipping] = useState(false);
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [book, setBook] = useState<BookData | null>(null);
+  const [totalPages, setTotalPages] = useState(0);
 
   // Theme state with localStorage persistence
   const [selectedColor, setSelectedColor] = useLocalStorage<ColorTheme>(
     "book-color-theme",
     DEFAULT_THEME
   );
+
+  // Fetch book data
+  useEffect(() => {
+    const fetchBook = async () => {
+      setIsLoading(true);
+      try {
+        const result = await getBookById(bookId);
+        if (result.success && result.book) {
+          setBook(result.book as BookData);
+          // Total pages = chapters + 2 (cover + thank you page)
+          setTotalPages(result.book.chapters.length + 2);
+        } else {
+          setError(result.error || "Failed to load book");
+        }
+      } catch (err) {
+        setError("An error occurred while fetching the book");
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (bookId) {
+      fetchBook();
+    }
+  }, [bookId]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -54,12 +109,12 @@ export default function BookView() {
   const isMobile = dimensions.width < 768;
 
   useEffect(() => {
-    if (bookRef.current) {
+    if (bookRef.current && book) {
       setTimeout(() => {
         bookRef.current.pageFlip().turnToPage(0);
       }, 100);
     }
-  }, [isMobile]);
+  }, [isMobile, book]);
 
   const handlePrevPage = () => {
     if (bookRef.current && currentPage > 0 && !isFlipping) {
@@ -97,10 +152,25 @@ export default function BookView() {
   // Get current theme classes
   const theme = COLOR_VARIANTS[selectedColor];
 
-  if (dimensions.width === 0 || dimensions.height === 0) {
+  // Loading state
+  if (dimensions.width === 0 || dimensions.height === 0 || isLoading) {
     return (
       <div className="flex items-center justify-center w-full h-screen bg-background">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !book) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-screen bg-background">
+        <p className="text-destructive text-lg mb-4">
+          {error || "Book not found"}
+        </p>
+        <Button variant="default" onClick={() => window.history.back()}>
+          Go Back
+        </Button>
       </div>
     );
   }
@@ -245,7 +315,7 @@ export default function BookView() {
                 <h1
                   className={`text-4xl md:text-5xl font-bold text-center leading-tight tracking-tight ${theme.text} mb-6`}
                 >
-                  {data.title}
+                  {book.title}
                 </h1>
                 <div
                   className={`w-48 h-1 ${theme.accent} rounded-full my-6`}
@@ -256,7 +326,7 @@ export default function BookView() {
                 <h2
                   className={`text-2xl md:text-3xl font-medium text-center mt-3 ${theme.text}`}
                 >
-                  {data.author}
+                  {book.author || "Anonymous"}
                 </h2>
                 <div
                   className={`absolute bottom-6 right-6 text-sm ${theme.subtext}`}
@@ -267,9 +337,9 @@ export default function BookView() {
               </div>
 
               {/* Chapter Pages */}
-              {data.chapters.map((page, index) => (
+              {book.chapters.map((chapter, index) => (
                 <div
-                  key={index}
+                  key={chapter.id}
                   className={`relative flex-1 overflow-visible ${theme.page} p-8 ${theme.border} [transform-style:preserve-3d] [backface-visibility:visible]`}
                 >
                   <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
@@ -278,21 +348,30 @@ export default function BookView() {
                   <h1
                     className={`text-3xl md:text-4xl font-bold mb-6 ${theme.text}`}
                   >
-                    {page.title}
+                    {chapter.subTitle}
                   </h1>
                   <div className="relative w-full h-72 md:h-96 mt-4 mb-8 rounded-lg overflow-hidden shadow-lg">
-                    <Image
-                      src={page.image}
-                      alt={page.title}
-                      fill
-                      priority
-                      className="transition-transform duration-700 hover:scale-105 object-cover"
-                    />
+                    {chapter.imageUrl ? (
+                      <Image
+                        src={chapter.imageUrl}
+                        alt={chapter.subTitle}
+                        fill
+                        priority
+                        className="transition-transform duration-700 hover:scale-105 object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-muted">
+                        <p className="text-center px-4 text-muted-foreground">
+                          {chapter.imageDescription ||
+                            `Illustration for ${chapter.subTitle}`}
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <p
                     className={`mt-4 text-lg leading-relaxed ${theme.subtext}`}
                   >
-                    {page.content}
+                    {chapter.textContent}
                   </p>
                   <div
                     className={`absolute bottom-6 right-6 text-sm font-medium ${theme.subtext} ${theme.page}/80 dark:${theme.page}/80 px-3 py-1.5 rounded-full shadow-sm backdrop-blur-sm`}
