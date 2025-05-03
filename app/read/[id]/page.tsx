@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { use } from "react";
 
 type ReadByIdPageProps = {
   params: {
@@ -7,5 +8,7 @@ type ReadByIdPageProps = {
 };
 
 export default function ReadByIdPage({ params }: ReadByIdPageProps) {
-  redirect(`/book/by-id/${params.id}`);
+  // Unwrap params if it's a Promise
+  const resolvedParams = params instanceof Promise ? use(params) : params;
+  redirect(`/book/by-id/${resolvedParams.id}`);
 }

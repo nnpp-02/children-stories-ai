@@ -2,7 +2,7 @@
 
 import BookView from "@/components/book-view";
 import { getBookBySlug } from "@/actions/book";
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { Button } from "@/components/ui/button";
 
 type BookPageProps = {
@@ -12,6 +12,9 @@ type BookPageProps = {
 };
 
 export default function BookPage({ params }: BookPageProps) {
+  const resolvedParams = params instanceof Promise ? use(params) : params;
+  const slug = resolvedParams.slug;
+
   const [bookId, setBookId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +23,7 @@ export default function BookPage({ params }: BookPageProps) {
     const fetchBook = async () => {
       try {
         setIsLoading(true);
-        const result = await getBookBySlug(params.slug);
+        const result = await getBookBySlug(slug);
 
         if (result.success && result.book) {
           setBookId(result.book.id);
@@ -35,10 +38,10 @@ export default function BookPage({ params }: BookPageProps) {
       }
     };
 
-    if (params.slug) {
+    if (slug) {
       fetchBook();
     }
-  }, [params.slug]);
+  }, [slug]);
 
   if (isLoading) {
     return (

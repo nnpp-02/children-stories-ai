@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import slugify from "slugify";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { PrismaClient } from "@prisma/client";
+import { generateImageAi } from "./image";
 
 // Create a new instance of the PrismaClient
 const prisma = new PrismaClient();
@@ -67,6 +68,37 @@ async function getCurrentUserId() {
     const payload = verify(token, JWT_SECRET) as TokenPayload;
     return payload.id;
   } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * Gets the current user information
+ */
+async function getCurrentUser() {
+  const token = await getAuthToken();
+
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const payload = verify(token, JWT_SECRET) as TokenPayload;
+
+    // Get full user details from database
+    const user = await prisma.user.findUnique({
+      where: { id: payload.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+      },
+    });
+
+    return user;
+  } catch (error) {
+    console.error("Error getting current user:", error);
     return null;
   }
 }
@@ -188,11 +220,15 @@ export async function createBook(data: {
   title?: string;
 }) {
   try {
-    const userId = await getCurrentUserId();
+    // Get current user with full details
+    const currentUser = await getCurrentUser();
 
-    if (!userId) {
+    if (!currentUser) {
       return { success: false, error: "Not authenticated" };
     }
+
+    const userId = currentUser.id;
+    const userName = currentUser.name || currentUser.email.split("@")[0];
 
     // Validate input
     if (!data.prompt || data.prompt.trim().length < 10) {
@@ -221,39 +257,86 @@ export async function createBook(data: {
     const slug = `${baseSlug}-${Date.now().toString().slice(-6)}`;
 
     try {
-      // Create the book using Prisma ORM
-      const newBook = await prisma.book.create({
-        data: {
-          bookTitle,
-          slug,
-          bookCoverDescription: storyResult.bookCoverDescription,
-          numPages: data.numPages,
-          userId,
-          status: "completed",
-          chapters: {
-            create: storyResult.chapters.map((chapter) => ({
-              subTitle: chapter.subTitle,
-              textContent: chapter.textContent,
-              imageDescription: chapter.imageDescription,
-              page: chapter.page,
-            })),
+      // Attempt to generate book cover image - errors will be handled inside the function
+      console.log("Generating book cover image...");
+      const bookCoverUrl = await generateImageAi(
+        storyResult.bookCoverDescription
+      );
+
+      // Generate chapter images in parallel - all errors are handled internally in generateImageAi
+      console.log("Generating chapter images in parallel...");
+      const chapterImagesPromises = storyResult.chapters.map(
+        async (chapter) => {
+          try {
+            console.log(`Generating image for "${chapter.subTitle}"`);
+            const imageUrl = await generateImageAi(chapter.imageDescription);
+            return {
+              ...chapter,
+              imageUrl,
+            };
+          } catch (error) {
+            console.warn(
+              `Using default image for chapter "${chapter.subTitle}"`
+            );
+            return {
+              ...chapter,
+              imageUrl: null,
+            };
+          }
+        }
+      );
+
+      // Wait for all chapter images to be generated
+      const chaptersWithImages = await Promise.all(chapterImagesPromises);
+
+      // Use a transaction to ensure all database operations succeed or fail together
+      const result = await prisma.$transaction(async (tx) => {
+        // Create the book
+        const newBook = await tx.book.create({
+          data: {
+            bookTitle,
+            slug,
+            bookCoverDescription: storyResult.bookCoverDescription,
+            bookCoverUrl,
+            numPages: data.numPages,
+            userId,
           },
-        },
-        select: {
-          id: true,
-          bookTitle: true,
-          slug: true,
-          status: true,
-        },
+          select: {
+            id: true,
+            bookTitle: true,
+            slug: true,
+          },
+        });
+
+        // Create all chapters with their images
+        await Promise.all(
+          chaptersWithImages.map((chapter) =>
+            tx.chapter.create({
+              data: {
+                bookId: newBook.id,
+                subTitle: chapter.subTitle,
+                textContent: chapter.textContent,
+                imageDescription: chapter.imageDescription,
+                page: chapter.page,
+                imageUrl: chapter.imageUrl,
+              },
+            })
+          )
+        );
+
+        return newBook;
       });
 
+      console.log(
+        `Book "${bookTitle}" created successfully with ID: ${result.id} by author: ${userName}`
+      );
       return {
         success: true,
         book: {
-          id: newBook.id,
-          title: newBook.bookTitle,
-          status: newBook.status,
-          slug: newBook.slug,
+          id: result.id,
+          title: result.bookTitle,
+          slug: result.slug,
+          author: userName,
         },
       };
     } catch (dbError) {
@@ -377,6 +460,7 @@ export async function getBookBySlug(slug: string) {
           select: {
             id: true,
             name: true,
+            email: true,
           },
         },
       },
@@ -385,6 +469,11 @@ export async function getBookBySlug(slug: string) {
     if (!book) {
       return { success: false, error: "Book not found" };
     }
+
+    // Determine the author name - use user's name, fallback to email, or "Anonymous"
+    const authorName =
+      book.user.name ||
+      (book.user.email ? book.user.email.split("@")[0] : "Anonymous");
 
     return {
       success: true,
@@ -396,7 +485,7 @@ export async function getBookBySlug(slug: string) {
         status: book.status,
         slug: book.slug,
         chapters: book.chapters,
-        author: book.user.name || "Anonymous",
+        author: authorName,
         authorId: book.user.id,
         createdAt: book.createdAt,
       },
