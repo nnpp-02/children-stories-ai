@@ -28,7 +28,7 @@ export default async function DashboardPage() {
         <DashboardCard
           title="My Stories"
           description="View and manage your created stories"
-          linkHref="/my-stories"
+          linkHref="/dashboard/my-stories"
           linkText="View All"
           colorClass="bg-gradient-to-br from-pink-500 to-rose-600"
         />

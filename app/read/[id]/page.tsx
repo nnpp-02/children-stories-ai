@@ -7,5 +7,5 @@ type ReadByIdPageProps = {
 };
 
 export default function ReadByIdPage({ params }: ReadByIdPageProps) {
-  redirect(`/book/id/${params.id}`);
+  redirect(`/book/by-id/${params.id}`);
 }

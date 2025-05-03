@@ -93,7 +93,7 @@ export default async function MyStoriesPage() {
                       : "Generating..."}
                   </span>
                   <Button asChild variant="ghost" size="sm">
-                    <Link href={`/book/${book.slug}`}>
+                    <Link href={`/books/${book.slug}`}>
                       {book.status === "completed" ? "Read" : "View"}
                     </Link>
                   </Button>
