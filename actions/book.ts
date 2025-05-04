@@ -580,7 +580,6 @@ export async function searchBooks(query: string) {
       orderBy: {
         createdAt: "desc",
       },
-      take: 20, // Limit results to 20 books
     });
 
     return {
