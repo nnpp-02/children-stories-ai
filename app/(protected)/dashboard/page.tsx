@@ -17,27 +17,13 @@ export default async function DashboardPage() {
         <LogoutButton />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <DashboardCard
-          title="Create a Story"
-          description="Generate a new AI-powered children's story"
-          linkHref="/create-story"
-          linkText="Create Now"
-          colorClass="bg-gradient-to-br from-purple-500 to-indigo-600"
-        />
+      <div className="grid grid-cols-1 gap-6">
         <DashboardCard
           title="My Stories"
           description="View and manage your created stories"
           linkHref="/dashboard/my-stories"
           linkText="View All"
           colorClass="bg-gradient-to-br from-pink-500 to-rose-600"
-        />
-        <DashboardCard
-          title="Account Settings"
-          description="Update your profile and preferences"
-          linkHref="/settings"
-          linkText="Settings"
-          colorClass="bg-gradient-to-br from-emerald-500 to-teal-600"
         />
       </div>
 

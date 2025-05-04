@@ -495,3 +495,118 @@ export async function getBookBySlug(slug: string) {
     return { success: false, error: "Failed to fetch book" };
   }
 }
+
+/**
+ * Deletes a book by ID
+ */
+export async function deleteBook(bookId: string) {
+  try {
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      return { success: false, error: "Not authenticated" };
+    }
+
+    // First verify the book belongs to the user
+    const book = await prisma.book.findUnique({
+      where: {
+        id: bookId,
+        userId, // Ensure it belongs to the current user
+      },
+      select: {
+        id: true,
+        bookTitle: true,
+      },
+    });
+
+    if (!book) {
+      return {
+        success: false,
+        error: "Book not found or you don't have permission to delete it",
+      };
+    }
+
+    // Delete the book (cascade delete will handle chapters)
+    await prisma.book.delete({
+      where: {
+        id: bookId,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Book deleted successfully",
+    };
+  } catch (error) {
+    console.error("Error deleting book:", error);
+    return { success: false, error: "Failed to delete book" };
+  }
+}
+
+/**
+ * Searches for books with titles matching the query
+ */
+export async function searchBooks(query: string) {
+  try {
+    if (!query || query.trim().length < 2) {
+      return {
+        success: true,
+        books: [],
+        message: "Please enter at least 2 characters to search",
+      };
+    }
+
+    const books = await prisma.book.findMany({
+      where: {
+        bookTitle: {
+          contains: query,
+          mode: "insensitive", // Case-insensitive search
+        },
+        // Only include books with status completed
+        status: "completed",
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        _count: {
+          select: {
+            chapters: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 20, // Limit results to 20 books
+    });
+
+    return {
+      success: true,
+      books: books.map((book) => {
+        // Determine the author name
+        const authorName =
+          book.user.name ||
+          (book.user.email ? book.user.email.split("@")[0] : "Anonymous");
+
+        return {
+          id: book.id,
+          title: book.bookTitle,
+          coverImage: book.bookCoverUrl,
+          status: book.status,
+          slug: book.slug,
+          chaptersCount: book._count.chapters,
+          createdAt: book.createdAt,
+          author: authorName,
+        };
+      }),
+    };
+  } catch (error) {
+    console.error("Error searching books:", error);
+    return { success: false, error: "Failed to search books" };
+  }
+}

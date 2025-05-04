@@ -312,14 +312,38 @@ export default function BookView({ bookId }: BookViewProps) {
                 <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
                   <div className="absolute inset-0 bg-[url('/images/paper-texture.png')] bg-repeat opacity-30 mix-blend-overlay"></div>
                 </div>
+
+                {/* Book Cover Image */}
+                {book.coverImage ? (
+                  <div className="relative w-full h-1/2 mb-6 flex justify-center items-center">
+                    <div className="relative w-3/4 max-w-sm h-64 md:h-80 rounded-lg overflow-hidden shadow-xl">
+                      <Image
+                        src={book.coverImage}
+                        alt={`Cover for ${book.title}`}
+                        fill
+                        priority
+                        className="object-cover transition-transform duration-700 hover:scale-105"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className={`w-48 h-1 ${theme.accent} rounded-full my-6`}
+                  ></div>
+                )}
+
                 <h1
                   className={`text-4xl md:text-5xl font-bold text-center leading-tight tracking-tight ${theme.text} mb-6`}
                 >
                   {book.title}
                 </h1>
-                <div
-                  className={`w-48 h-1 ${theme.accent} rounded-full my-6`}
-                ></div>
+
+                {!book.coverImage && (
+                  <div
+                    className={`w-48 h-1 ${theme.accent} rounded-full my-6`}
+                  ></div>
+                )}
+
                 <p className={`text-xl text-center ${theme.subtext} italic`}>
                   Written by
                 </p>
