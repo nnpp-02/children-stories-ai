@@ -562,8 +562,6 @@ export async function searchBooks(query: string) {
           contains: query,
           mode: "insensitive", // Case-insensitive search
         },
-        // Only include books with status completed
-        status: "completed",
       },
       include: {
         user: {
